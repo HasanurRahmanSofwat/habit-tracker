@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habit</title>
+  <meta name="theme-color" content="#f7f7f5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Habit" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --card: #ffffff;
+      --text: #171717;
+      --muted: #8a8a86;
+      --line: #e8e8e3;
+      --empty: #f4f4f1;
+      --button: #f1f1ed;
+      --shadow: 0 1px 2px rgba(0,0,0,.03);
+    }
+
+    [data-theme="dark"] {
+      --bg: #111210;
+      --card: #191a18;
+      --text: #f3f3ee;
+      --muted: #96978f;
+      --line: #2b2c28;
+      --empty: #343631;
+      --button: #242520;
+      --shadow: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app {
+      width: min(560px, 100%);
+      margin: 0 auto;
+      padding: 26px 18px 80px;
+    }
+
+    .topbar {
+      height: 26px;
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .menu-button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .menu-button:hover {
+      background: var(--button);
+      color: var(--text);
+    }
+
+    .habit {
+      padding: 24px 0 30px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .habit:first-of-type { padding-top: 14px; }
+
+    .habit-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    .habit-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .habit-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .habit-action {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .progress-count {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 30px;
+    }
+
+    .undo-inline {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 4px 2px;
+    }
+
+    .undo-inline:hover {
+      color: var(--text);
+    }
+
+    .habit-name {
+      font-size: 18px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+
+    .habit-meta {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .month-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .month-label {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 112px;
+      text-align: center;
+    }
+
+    .calendar-nav-button,
+    .view-toggle {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 7px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    .calendar-nav-button {
+      width: 28px;
+      height: 28px;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .view-toggle {
+      height: 28px;
+      padding: 0 9px;
+      font-size: 11px;
+      border: 1px solid var(--line);
+    }
+
+    .calendar-nav-button:hover,
+    .view-toggle:hover {
+      background: var(--button);
+      color: var(--text);
+    }
+
+    .year-days-grid {
+      display: grid;
+      grid-template-columns: repeat(14, minmax(0, 1fr));
+      gap: 3px;
+      margin-bottom: 16px;
+    }
+
+    .year-day {
+      aspect-ratio: 1;
+      border-radius: 3px;
+      background: var(--empty);
+      position: relative;
+      overflow: hidden;
+      min-width: 0;
+      border: 1px solid transparent;
+    }
+
+    .year-day.future {
+      opacity: .42;
+    }
+
+    .year-day.before-start {
+      opacity: .25;
+    }
+
+    .year-day.today {
+      outline: 1px solid var(--text);
+      outline-offset: 1px;
+    }
+
+    .year-day-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      height: 100%;
+      opacity: .68;
+    }
+
+    @media (min-width: 520px) {
+      .year-days-grid {
+        grid-template-columns: repeat(21, minmax(0, 1fr));
+      }
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+
+    .dow {
+      text-align: center;
+      font-size: 9px;
+      color: var(--muted);
+      padding-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
+    .day {
+      aspect-ratio: 1;
+      border-radius: 5px;
+      background: var(--empty);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid transparent;
+      min-width: 0;
+    }
+
+    .day.outside {
+      background: transparent;
+      border-color: transparent;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .day.future {
+      background: var(--empty);
+      border-color: transparent;
+      opacity: .45;
+    }
+
+    .day.before-start {
+      background: var(--empty);
+      border-color: transparent;
+      opacity: .28;
+    }
+
+    .day.today {
+      outline: 1.5px solid var(--text);
+      outline-offset: 2px;
+    }
+
+    .day-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      height: 100%;
+      transition: width .2s ease;
+      opacity: .68;
+    }
+
+    .day-number {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 9px;
+      color: transparent;
+      user-select: none;
+    }
+
+    .today-control {
+      display: none;
+    }
+
+    .complete-button {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    .complete-button:hover { background: var(--button); }
+
+    .empty-check {
+      width: 25px;
+      height: 25px;
+      border: 1.5px solid var(--muted);
+      border-radius: 6px;
+      display: block;
+    }
+
+    .standalone-tick {
+      font-size: 29px;
+      line-height: 1;
+      font-weight: 750;
+      display: block;
+      transform: translateY(-1px);
+    }
+
+    .count {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 38px;
+    }
+
+    .undo {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 6px;
+    }
+
+    .empty-state {
+      padding: 100px 10px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Settings */
+    .panel-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.26);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      z-index: 10;
+    }
+
+    .panel-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .panel {
+      position: fixed;
+      z-index: 11;
+      top: 0;
+      right: 0;
+      width: min(390px, 94vw);
+      height: 100vh;
+      background: var(--card);
+      color: var(--text);
+      border-left: 1px solid var(--line);
+      transform: translateX(100%);
+      transition: transform .22s ease;
+      padding: 24px 20px 40px;
+      overflow-y: auto;
+    }
+
+    .panel.open { transform: translateX(0); }
+
+    .panel-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .panel h2 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .close-button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .section {
+      padding: 0 0 26px;
+      margin-bottom: 26px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0 12px;
+      margin-bottom: 14px;
+      outline: none;
+    }
+
+    .colors {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .custom-color-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .custom-color-input {
+      width: 46px;
+      height: 46px;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .custom-color-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .custom-color-input::-webkit-color-swatch {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .custom-color-value {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .weekday-picker {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .weekday-toggle {
+      height: 34px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0;
+    }
+
+    .weekday-toggle.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    .manage-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .edit-button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .edit-button:hover,
+    .delete-button:hover {
+      color: var(--text);
+    }
+
+    .color-option {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .color-option.selected {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+    }
+
+    .primary {
+      width: 100%;
+      height: 42px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--text);
+      color: var(--bg);
+      cursor: pointer;
+      font-weight: 650;
+    }
+
+    .theme-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .theme-button {
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 10px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .theme-button.active {
+      border-color: var(--text);
+    }
+
+    .settings-actions {
+      display: grid;
+      gap: 8px;
+    }
+
+    .settings-action {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 10px;
+      cursor: pointer;
+      padding: 0 12px;
+      text-align: center;
+    }
+
+    .settings-action:hover {
+      background: var(--button);
+    }
+
+    .settings-note {
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--muted);
+      margin-top: 9px;
+    }
+
+    .manage-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .manage-item:last-child { border-bottom: 0; }
+
+    .manage-name { font-size: 14px; }
+    .manage-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    .delete-button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    @media (max-width: 420px) {
+      .app { padding-left: 14px; padding-right: 14px; }
+      .calendar { gap: 5px; }
+      .habit { padding-top: 22px; padding-bottom: 27px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <div class="topbar">
+      <button class="menu-button" id="openSettings" aria-label="Open settings">⋯</button>
+    </div>
+
+    <div id="habitList"></div>
+  </main>
+
+  <div class="panel-backdrop" id="backdrop"></div>
+
+  <aside class="panel" id="settingsPanel">
+    <div class="panel-top">
+      <h2>Settings</h2>
+      <button class="close-button" id="closeSettings" aria-label="Close settings">×</button>
+    </div>
+
+    <section class="section">
+      <div class="section-title">Add habit</div>
+
+      <label for="habitName">Habit name</label>
+      <input type="text" id="habitName" placeholder="Study" maxlength="40" />
+
+      <label for="habitTarget">Times per day</label>
+      <input type="number" id="habitTarget" min="1" max="50" value="1" />
+
+      <label>Days</label>
+      <div class="weekday-picker" id="weekdayPicker"></div>
+
+      <label for="habitColor">Color</label>
+      <div class="custom-color-wrap">
+        <input class="custom-color-input" type="color" id="habitColor" value="#5B8DEF" />
+        <span class="custom-color-value" id="habitColorValue">#5B8DEF</span>
+      </div>
+
+      <button class="primary" id="addHabit">Add habit</button>
+      <button class="theme-button" id="cancelEdit" style="width:100%;margin-top:8px;display:none;">Cancel edit</button>
+    </section>
+
+    <section class="section">
+      <div class="section-title">Appearance</div>
+      <div class="theme-row">
+        <button class="theme-button" data-theme-choice="light">Light</button>
+        <button class="theme-button" data-theme-choice="dark">Dark</button>
+        <button class="theme-button" data-theme-choice="system">System</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">App</div>
+      <div class="settings-actions">
+        <button class="settings-action" id="installApp">Install on device</button>
+      </div>
+      <div class="settings-note" id="installNote">Install this tracker on your home screen when supported.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">Data</div>
+      <div class="settings-actions">
+        <button class="settings-action" id="exportData">Export backup</button>
+        <button class="settings-action" id="importData">Restore backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+      </div>
+      <div class="settings-note">Backups stay on your device. Restoring replaces the current tracker data.</div>
+    </section>
+
+    <section class="section">
+      <div class="section-title">Manage habits</div>
+      <div id="manageHabits"></div>
+    </section>
+  </aside>
+
+  <script>
+    const STORAGE_KEY = "minimal-habit-tracker-v1";
+
+    const COLORS = [
+      "#5B8DEF", "#79A7FF", "#93B4FF", "#6C63FF",
+      "#55A985", "#6FCF97", "#8ED8B2", "#9BCF53",
+      "#D8984B", "#F2C14E", "#F4A261", "#FFB86B",
+      "#B47ADB", "#C084FC", "#A78BFA", "#E879F9",
+      "#D86565", "#F87171", "#FB7185", "#FF9EAE",
+      "#4FA8B8", "#67C6D4", "#22B8CF", "#38BDF8",
+      "#8F9A54", "#A3B18A", "#C0CA33", "#84CC16",
+      "#9E9E9E", "#6B7280", "#A8A29E", "#78716C"
+    ];
+
+    const state = loadState();
+    migrateHabits();
+    let selectedColor = "#5B8DEF";
+    let selectedWeekdays = [0,1,2,3,4,5,6];
+    let editingHabitId = null;
+    const calendarUi = {};
+
+    function getCalendarUi(habitId) {
+      if (!calendarUi[habitId]) {
+        const now = new Date();
+        calendarUi[habitId] = {
+          mode: "month",
+          anchor: new Date(now.getFullYear(), now.getMonth(), 1)
+        };
+      }
+      return calendarUi[habitId];
+    }
+
+    function defaultState() {
+      const today = isoDate(new Date());
+      return {
+        theme: "system",
+        habits: [
+          {
+            id: crypto.randomUUID(),
+            name: "Study",
+            target: 1,
+            color: COLORS[0],
+            weekdays: [0,1,2,3,4,5,6],
+            startDate: today,
+            completions: {}
+          }
+        ]
+      };
+    }
+
+    function loadState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : defaultState();
+      } catch {
+        return defaultState();
+      }
+    }
+
+    function migrateHabits() {
+      state.habits.forEach(habit => {
+        if (!Array.isArray(habit.weekdays) || !habit.weekdays.length) {
+          habit.weekdays = [0,1,2,3,4,5,6];
+        }
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    let deferredInstallPrompt = null;
+
+    function exportBackup() {
+      const backup = {
+        app: "minimal-habit-tracker",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data: state
+      };
+
+      const blob = new Blob(
+        [JSON.stringify(backup, null, 2)],
+        { type: "application/json" }
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `habit-backup-${isoDate(new Date())}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function isValidBackup(backup) {
+      if (!backup || typeof backup !== "object") return false;
+
+      const data = backup.data || backup;
+      if (!data || typeof data !== "object") return false;
+      if (!Array.isArray(data.habits)) return false;
+
+      return data.habits.every(habit =>
+        habit &&
+        typeof habit.id === "string" &&
+        typeof habit.name === "string" &&
+        Number.isInteger(Number(habit.target)) &&
+        Number(habit.target) >= 1 &&
+        typeof habit.color === "string" &&
+        typeof habit.startDate === "string" &&
+        habit.completions &&
+        typeof habit.completions === "object"
+      );
+    }
+
+    async function restoreBackup(file) {
+      if (!file) return;
+
+      try {
+        const raw = await file.text();
+        const backup = JSON.parse(raw);
+
+        if (!isValidBackup(backup)) {
+          alert("This does not look like a valid habit tracker backup.");
+          return;
+        }
+
+        const restored = backup.data || backup;
+
+        const confirmed = confirm(
+          "Restore this backup? Your current habits and history will be replaced."
+        );
+        if (!confirmed) return;
+
+        state.theme = ["light", "dark", "system"].includes(restored.theme)
+          ? restored.theme
+          : "system";
+
+        state.habits = restored.habits.map(habit => ({
+          id: String(habit.id),
+          name: String(habit.name).slice(0, 40),
+          target: Math.max(1, Math.min(50, Number(habit.target))),
+          color: String(habit.color),
+          weekdays:
+            Array.isArray(habit.weekdays) && habit.weekdays.length
+              ? habit.weekdays.filter(d => Number.isInteger(d) && d >= 0 && d <= 6)
+              : [0,1,2,3,4,5,6],
+          startDate: String(habit.startDate),
+          completions: habit.completions
+        }));
+
+        Object.keys(calendarUi).forEach(key => delete calendarUi[key]);
+        saveState();
+        cancelEditHabit();
+        render();
+        closePanel();
+        alert("Backup restored.");
+      } catch {
+        alert("I could not read that backup file.");
+      } finally {
+        const input = document.getElementById("importFile");
+        if (input) input.value = "";
+      }
+    }
+
+    async function installApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        try {
+          await deferredInstallPrompt.userChoice;
+        } catch {}
+        deferredInstallPrompt = null;
+        updateInstallUi();
+        return;
+      }
+
+      alert(
+        "If the install prompt is not available: on iPhone/iPad use Safari → Share → Add to Home Screen. On Android/Chrome use the browser menu → Install app or Add to Home screen."
+      );
+    }
+
+    function updateInstallUi() {
+      const button = document.getElementById("installApp");
+      const note = document.getElementById("installNote");
+      if (!button || !note) return;
+
+      if (window.matchMedia &&
+          window.matchMedia("(display-mode: standalone)").matches) {
+        button.textContent = "Installed";
+        button.disabled = true;
+        note.textContent = "This tracker is already running as an installed app.";
+      } else if (deferredInstallPrompt) {
+        button.textContent = "Install on device";
+        button.disabled = false;
+        note.textContent = "Ready to install on this device.";
+      } else {
+        button.textContent = "Install on device";
+        button.disabled = false;
+        note.textContent = "If your browser does not show an install prompt, use its Add to Home Screen option.";
+      }
+    }
+
+    function isoDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseIso(s) {
+      const [y,m,d] = s.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function monthName(date) {
+      return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    }
+
+    function isScheduledDay(habit, date) {
+      return habit.weekdays.includes(date.getDay());
+    }
+
+    function streakFor(habit) {
+      let streak = 0;
+      let d = new Date();
+      const todayKey = isoDate(d);
+      const todayCount = habit.completions[todayKey] || 0;
+
+      // If today is scheduled but incomplete, start looking from yesterday.
+      if (isScheduledDay(habit, d) && todayCount < habit.target) {
+        d.setDate(d.getDate() - 1);
+      }
+
+      while (isoDate(d) >= habit.startDate) {
+        if (!isScheduledDay(habit, d)) {
+          d.setDate(d.getDate() - 1);
+          continue;
+        }
+
+        const key = isoDate(d);
+        if ((habit.completions[key] || 0) >= habit.target) {
+          streak++;
+          d.setDate(d.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      return streak;
+    }
+
+    function changeCalendarPeriod(habitId, delta) {
+      const ui = getCalendarUi(habitId);
+
+      if (ui.mode === "month") {
+        ui.anchor = new Date(
+          ui.anchor.getFullYear(),
+          ui.anchor.getMonth() + delta,
+          1
+        );
+      } else {
+        ui.anchor = new Date(
+          ui.anchor.getFullYear() + delta,
+          0,
+          1
+        );
+      }
+
+      render();
+    }
+
+    function toggleCalendarMode(habitId) {
+      const ui = getCalendarUi(habitId);
+
+      if (ui.mode === "month") {
+        ui.mode = "year";
+        ui.anchor = new Date(ui.anchor.getFullYear(), 0, 1);
+      } else {
+        ui.mode = "month";
+
+        // Returning from Year view opens the current month when viewing this year,
+        // otherwise January of the selected year.
+        const now = new Date();
+        const month =
+          ui.anchor.getFullYear() === now.getFullYear()
+            ? now.getMonth()
+            : 0;
+
+        ui.anchor = new Date(ui.anchor.getFullYear(), month, 1);
+      }
+
+      render();
+    }
+
+    function makeCalendarHeader(habit) {
+      const ui = getCalendarUi(habit.id);
+
+      const row = document.createElement("div");
+      row.className = "month-row";
+
+      const nav = document.createElement("div");
+      nav.className = "month-nav";
+
+      const prev = document.createElement("button");
+      prev.className = "calendar-nav-button";
+      prev.type = "button";
+      prev.textContent = "‹";
+      prev.setAttribute(
+        "aria-label",
+        ui.mode === "month" ? "Previous month" : "Previous year"
+      );
+      prev.addEventListener("click", () => changeCalendarPeriod(habit.id, -1));
+
+      const label = document.createElement("div");
+      label.className = "month-label";
+      label.textContent =
+        ui.mode === "month"
+          ? monthName(ui.anchor)
+          : String(ui.anchor.getFullYear());
+
+      const next = document.createElement("button");
+      next.className = "calendar-nav-button";
+      next.type = "button";
+      next.textContent = "›";
+      next.setAttribute(
+        "aria-label",
+        ui.mode === "month" ? "Next month" : "Next year"
+      );
+      next.addEventListener("click", () => changeCalendarPeriod(habit.id, 1));
+
+      nav.append(prev, label, next);
+
+      const toggle = document.createElement("button");
+      toggle.className = "view-toggle";
+      toggle.type = "button";
+      toggle.textContent = ui.mode === "month" ? "Year" : "Month";
+      toggle.setAttribute(
+        "aria-label",
+        ui.mode === "month" ? "Switch this habit to year view" : "Switch this habit to month view"
+      );
+      toggle.addEventListener("click", () => toggleCalendarMode(habit.id));
+
+      row.append(nav, toggle);
+      return row;
+    }
+
+    function fillForDate(habit, key, todayKey) {
+      if (key < habit.startDate || key > todayKey) return 0;
+      const count = habit.completions[key] || 0;
+      return Math.min(count / habit.target, 1) * 100;
+    }
+
+    function createMonthCalendar(habit, year, month) {
+      const cal = document.createElement("div");
+      cal.className = "calendar";
+
+      ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(x => {
+        const el = document.createElement("div");
+        el.className = "dow";
+        el.textContent = x;
+        cal.appendChild(el);
+      });
+
+      const first = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const startOffset = first.getDay();
+      const todayKey = isoDate(new Date());
+
+      // Blank spaces only align the first date to the correct weekday.
+      for (let i = 0; i < startOffset; i++) {
+        const blank = document.createElement("div");
+        blank.className = "day outside";
+        cal.appendChild(blank);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const key = isoDate(date);
+        const count = habit.completions[key] || 0;
+        const pct = fillForDate(habit, key, todayKey);
+
+        const cell = document.createElement("div");
+        cell.className = "day";
+
+        if (key === todayKey) cell.classList.add("today");
+        if (key > todayKey) cell.classList.add("future");
+        if (key < habit.startDate) cell.classList.add("before-start");
+        if (!isScheduledDay(habit, date)) cell.style.opacity = "0.18";
+
+        if (pct > 0) {
+          const fill = document.createElement("div");
+          fill.className = "day-fill";
+          fill.style.width = pct + "%";
+          fill.style.background = habit.color;
+          cell.appendChild(fill);
+        }
+
+        const number = document.createElement("div");
+        number.className = "day-number";
+        number.textContent = day;
+        cell.appendChild(number);
+
+        cell.title = `${key}: ${count}/${habit.target}`;
+        cal.appendChild(cell);
+      }
+
+      return cal;
+    }
+
+    function createYearCalendar(habit, year) {
+      const grid = document.createElement("div");
+      grid.className = "year-days-grid";
+
+      const todayKey = isoDate(new Date());
+      const start = new Date(year, 0, 1);
+      const end = new Date(year + 1, 0, 1);
+
+      for (
+        let date = new Date(start);
+        date < end;
+        date.setDate(date.getDate() + 1)
+      ) {
+        const dayDate = new Date(date);
+        const key = isoDate(dayDate);
+        const count = habit.completions[key] || 0;
+        const pct = fillForDate(habit, key, todayKey);
+
+        const cell = document.createElement("div");
+        cell.className = "year-day";
+
+        if (key === todayKey) cell.classList.add("today");
+        if (key > todayKey) cell.classList.add("future");
+        if (key < habit.startDate) cell.classList.add("before-start");
+        if (!isScheduledDay(habit, dayDate)) cell.style.opacity = "0.18";
+
+        if (pct > 0) {
+          const fill = document.createElement("div");
+          fill.className = "year-day-fill";
+          fill.style.width = pct + "%";
+          fill.style.background = habit.color;
+          cell.appendChild(fill);
+        }
+
+        cell.title = `${key}: ${count}/${habit.target}`;
+        grid.appendChild(cell);
+      }
+
+      return grid;
+    }
+
+    function createCalendar(habit) {
+      const ui = getCalendarUi(habit.id);
+      const wrap = document.createElement("div");
+
+      wrap.appendChild(makeCalendarHeader(habit));
+
+      if (ui.mode === "month") {
+        wrap.appendChild(
+          createMonthCalendar(
+            habit,
+            ui.anchor.getFullYear(),
+            ui.anchor.getMonth()
+          )
+        );
+      } else {
+        wrap.appendChild(
+          createYearCalendar(
+            habit,
+            ui.anchor.getFullYear()
+          )
+        );
+      }
+
+      return wrap;
+    }
+
+    function incrementHabit(id) {
+      const habit = state.habits.find(h => h.id === id);
+      if (!habit) return;
+
+      const key = isoDate(new Date());
+      const current = habit.completions[key] || 0;
+
+      if (habit.target === 1 && current >= 1) {
+        habit.completions[key] = 0;
+      } else if (current < habit.target) {
+        habit.completions[key] = current + 1;
+      }
+
+      saveState();
+      render();
+    }
+
+    function decrementHabit(id) {
+      const habit = state.habits.find(h => h.id === id);
+      if (!habit) return;
+
+      const key = isoDate(new Date());
+      const current = habit.completions[key] || 0;
+      habit.completions[key] = Math.max(0, current - 1);
+
+      saveState();
+      render();
+    }
+
+    function render() {
+      applyTheme();
+
+      const list = document.getElementById("habitList");
+      list.innerHTML = "";
+
+      if (!state.habits.length) {
+        list.innerHTML = `<div class="empty-state">No habits yet.<br>Open ⋯ to add one.</div>`;
+      }
+
+      const todayKey = isoDate(new Date());
+
+      state.habits.forEach(habit => {
+        const section = document.createElement("section");
+        section.className = "habit";
+
+        const todayCount = habit.completions[todayKey] || 0;
+        const streak = streakFor(habit);
+
+        section.appendChild(createCalendar(habit));
+
+        const head = document.createElement("div");
+        head.className = "habit-head";
+
+        const left = document.createElement("div");
+        left.className = "habit-left";
+
+        const name = document.createElement("div");
+        name.className = "habit-name";
+        name.textContent = habit.name;
+
+        const action = document.createElement("div");
+        action.className = "habit-action";
+
+        const btn = document.createElement("button");
+        btn.className = "complete-button";
+        btn.setAttribute(
+          "aria-label",
+          habit.target === 1 ? "Toggle habit completion" : "Add one completion"
+        );
+
+        if (todayCount >= habit.target) {
+          btn.innerHTML = `<span class="standalone-tick" style="color:${habit.color}">✓</span>`;
+        } else {
+          btn.innerHTML = `<span class="empty-check"></span>`;
+        }
+
+        btn.addEventListener("click", () => {
+          const current = habit.completions[todayKey] || 0;
+
+          if (habit.target === 1) {
+            habit.completions[todayKey] = current >= 1 ? 0 : 1;
+          } else if (current < habit.target) {
+            habit.completions[todayKey] = current + 1;
+          }
+
+          saveState();
+          render();
+        });
+
+        action.appendChild(btn);
+
+        if (habit.target > 1) {
+          const progress = document.createElement("span");
+          progress.className = "progress-count";
+          progress.textContent = `${todayCount}/${habit.target}`;
+          action.appendChild(progress);
+
+          if (todayCount > 0) {
+            const undo = document.createElement("button");
+            undo.className = "undo-inline";
+            undo.textContent = "Undo";
+            undo.setAttribute("aria-label", "Undo one completion");
+            undo.addEventListener("click", () => {
+              const current = habit.completions[todayKey] || 0;
+              habit.completions[todayKey] = Math.max(0, current - 1);
+              saveState();
+              render();
+            });
+            action.appendChild(undo);
+          }
+        }
+
+        left.append(name, action);
+
+        const right = document.createElement("div");
+        right.className = "habit-right";
+
+        if (streak > 0) {
+          const streakEl = document.createElement("div");
+          streakEl.className = "habit-meta";
+          streakEl.textContent = `${streak} day streak`;
+          right.appendChild(streakEl);
+        }
+
+        head.append(left, right);
+        section.appendChild(head);
+        list.appendChild(section);
+      });
+
+      renderManage();
+      renderThemeButtons();
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      }[char]));
+    }
+
+    function renderManage() {
+      const box = document.getElementById("manageHabits");
+      box.innerHTML = "";
+
+      if (!state.habits.length) {
+        box.innerHTML = `<div style="color:var(--muted);font-size:13px;">No habits.</div>`;
+        return;
+      }
+
+      state.habits.forEach(habit => {
+        const item = document.createElement("div");
+        item.className = "manage-item";
+
+        const labels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        const dayText =
+          habit.weekdays.length === 7
+            ? "Every day"
+            : habit.weekdays.map(d => labels[d]).join(", ");
+
+        const text = document.createElement("div");
+        text.innerHTML = `
+          <div class="manage-name">${escapeHtml(habit.name)}</div>
+          <div class="manage-sub">${habit.target} ${habit.target === 1 ? "time" : "times"} per day · ${dayText}</div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "manage-actions";
+
+        const edit = document.createElement("button");
+        edit.className = "edit-button";
+        edit.textContent = "Edit";
+        edit.addEventListener("click", () => beginEditHabit(habit.id));
+
+        const del = document.createElement("button");
+        del.className = "delete-button";
+        del.textContent = "Delete";
+        del.addEventListener("click", () => {
+          if (confirm(`Delete "${habit.name}" and its history?`)) {
+            state.habits = state.habits.filter(h => h.id !== habit.id);
+            delete calendarUi[habit.id];
+            if (editingHabitId === habit.id) cancelEditHabit();
+            saveState();
+            render();
+          }
+        });
+
+        actions.append(edit, del);
+        item.append(text, actions);
+        box.appendChild(item);
+      });
+    }
+
+    function renderWeekdayPicker() {
+      const picker = document.getElementById("weekdayPicker");
+      if (!picker) return;
+
+      picker.innerHTML = "";
+      const labels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+      labels.forEach((label, day) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "weekday-toggle" + (selectedWeekdays.includes(day) ? " active" : "");
+        btn.textContent = label;
+        btn.addEventListener("click", () => {
+          if (selectedWeekdays.includes(day)) {
+            if (selectedWeekdays.length > 1) {
+              selectedWeekdays = selectedWeekdays.filter(d => d !== day);
+            }
+          } else {
+            selectedWeekdays = [...selectedWeekdays, day].sort((a,b) => a-b);
+          }
+          renderWeekdayPicker();
+        });
+        picker.appendChild(btn);
+      });
+    }
+
+    function beginEditHabit(id) {
+      const habit = state.habits.find(h => h.id === id);
+      if (!habit) return;
+
+      editingHabitId = id;
+      document.getElementById("habitName").value = habit.name;
+      document.getElementById("habitTarget").value = habit.target;
+      selectedColor = habit.color;
+      selectedWeekdays = [...habit.weekdays];
+
+      const colorInput = document.getElementById("habitColor");
+      const colorValue = document.getElementById("habitColorValue");
+      colorInput.value = habit.color;
+      colorValue.textContent = habit.color.toUpperCase();
+
+      document.getElementById("addHabit").textContent = "Save changes";
+      document.getElementById("cancelEdit").style.display = "block";
+      renderWeekdayPicker();
+      openPanel();
+      document.getElementById("habitName").focus();
+    }
+
+    function cancelEditHabit() {
+      editingHabitId = null;
+      document.getElementById("habitName").value = "";
+      document.getElementById("habitTarget").value = "1";
+      selectedWeekdays = [0,1,2,3,4,5,6];
+
+      document.getElementById("addHabit").textContent = "Add habit";
+      document.getElementById("cancelEdit").style.display = "none";
+      renderWeekdayPicker();
+    }
+
+    function setupColorPicker() {
+      const input = document.getElementById("habitColor");
+      const value = document.getElementById("habitColorValue");
+
+      selectedColor = input.value;
+
+      input.addEventListener("input", () => {
+        selectedColor = input.value;
+        value.textContent = input.value.toUpperCase();
+      });
+    }
+
+    function addHabit() {
+      const nameInput = document.getElementById("habitName");
+      const targetInput = document.getElementById("habitTarget");
+
+      const name = nameInput.value.trim();
+      const target = Number(targetInput.value);
+
+      if (!name) {
+        nameInput.focus();
+        return;
+      }
+
+      if (!Number.isInteger(target) || target < 1 || target > 50) {
+        alert("Times per day must be between 1 and 50.");
+        return;
+      }
+
+      if (!selectedWeekdays.length) {
+        alert("Choose at least one day.");
+        return;
+      }
+
+      if (editingHabitId) {
+        const habit = state.habits.find(h => h.id === editingHabitId);
+        if (habit) {
+          habit.name = name;
+          habit.target = target;
+          habit.color = selectedColor;
+          habit.weekdays = [...selectedWeekdays];
+        }
+      } else {
+        state.habits.push({
+          id: crypto.randomUUID(),
+          name,
+          target,
+          color: selectedColor,
+          weekdays: [...selectedWeekdays],
+          startDate: isoDate(new Date()),
+          completions: {}
+        });
+      }
+
+      saveState();
+      cancelEditHabit();
+      render();
+      closePanel();
+    }
+
+    function getSystemTheme() {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+
+    function applyTheme() {
+      const resolved = state.theme === "system" ? getSystemTheme() : state.theme;
+      document.documentElement.setAttribute("data-theme", resolved);
+    }
+
+    function renderThemeButtons() {
+      document.querySelectorAll("[data-theme-choice]").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.themeChoice === state.theme);
+      });
+    }
+
+    function setTheme(theme) {
+      state.theme = theme;
+      saveState();
+      render();
+    }
+
+    function openPanel() {
+      document.getElementById("settingsPanel").classList.add("open");
+      document.getElementById("backdrop").classList.add("open");
+    }
+
+    function closePanel() {
+      document.getElementById("settingsPanel").classList.remove("open");
+      document.getElementById("backdrop").classList.remove("open");
+    }
+
+    document.getElementById("openSettings").addEventListener("click", openPanel);
+    document.getElementById("closeSettings").addEventListener("click", closePanel);
+    document.getElementById("backdrop").addEventListener("click", closePanel);
+    document.getElementById("addHabit").addEventListener("click", addHabit);
+    document.getElementById("cancelEdit").addEventListener("click", cancelEditHabit);
+    document.getElementById("exportData").addEventListener("click", exportBackup);
+    document.getElementById("importData").addEventListener("click", () => {
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", event => {
+      restoreBackup(event.target.files && event.target.files[0]);
+    });
+    document.getElementById("installApp").addEventListener("click", installApp);
+
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      updateInstallUi();
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      updateInstallUi();
+    });
+
+    document.querySelectorAll("[data-theme-choice]").forEach(btn => {
+      btn.addEventListener("click", () => setTheme(btn.dataset.themeChoice));
+    });
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (state.theme === "system") applyTheme();
+    });
+
+    setupColorPicker();
+    renderWeekdayPicker();
+    render();
+    updateInstallUi();
+
+    if ("serviceWorker" in navigator &&
+        (location.protocol === "https:" || location.hostname === "localhost")) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
